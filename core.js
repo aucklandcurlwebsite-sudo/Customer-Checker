@@ -1,13 +1,15 @@
 export const STATUSES = ['Paid', 'Deposit', 'Unpaid', 'Quote'];
 export const COLORS = ['#96C1C5', '#FFF0DE', '#694A47', '#B8AAA6'];
 export function booking(value) {
-  const m = String(value).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})\s*\+\s*(\d{2}):(\d{2})$/);
-  if (!m) throw new Error('Use dd/mm/yyyy + HH:mm, for example 06/10/2026 + 14:30.');
+  const m = String(value).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})\s*\+\s*(\d{2}):(\d{2})(?:\s*-\s*(\d{2}):(\d{2}))?$/);
+  if (!m) throw new Error('Use dd/mm/yyyy + HH:mm - HH:mm, for example 06/10/2026 + 14:30 - 16:00.');
   const [, d, mo, y, h, mi] = m.map(Number);
+  const end = m[6] === undefined ? null : [Number(m[6]), Number(m[7])];
+  if (end && (end[0] > 23 || end[1] > 59 || end[0]*60+end[1] <= h*60+mi)) throw new Error('End time must be a valid 24-hour time after the start time on the same date.');
   const t = new Date(Date.UTC(y, mo - 1, d, h, mi));
   if (y < 1900 || y > 9999 || t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d || h > 23 || mi > 59) throw new Error('Enter a valid date and 24-hour time.');
   const pad = x => String(x).padStart(2, '0');
-  return {display: `${pad(d)}/${pad(mo)}/${y} + ${pad(h)}:${pad(mi)}`, sort: t.getTime()};
+  return {display: `${pad(d)}/${pad(mo)}/${y} + ${pad(h)}:${pad(mi)}` + (end ? ` - ${pad(end[0])}:${pad(end[1])}` : ''), sort: t.getTime()};
 }
 export function amountCents(value) {
   if (value === '' || value === null || value === undefined) return null;

@@ -14,7 +14,8 @@ export class MiroRepository {
   async add(input){
     const record={...validate(input),version:1,updatedAt:crypto.randomUUID()};
     const viewport=await this.miro.board.viewport.get();
-    const position=await this.miro.board.findEmptySpace({x:viewport.x+viewport.width/2,y:viewport.y+viewport.height/2,width:320,height:220});
+    // Avoid scanning other board items: stale connectors can make findEmptySpace fail.
+    const position={x:viewport.x+viewport.width/2,y:viewport.y+viewport.height/2};
     const card=await this.miro.board.createAppCard({title:escapeHtml(record.name),description:this.description(record),x:position.x,y:position.y,width:320,status:'connected'});
     // Keep a recoverable card if metadata persistence fails; never report it as saved.
     try{await card.setMetadata(KEY,record);}
@@ -38,10 +39,10 @@ export class MiroRepository {
 export class PreviewRepository {
   constructor(){
     this.rows=[
-      {id:'sample-1',...validate({name:'Sample customer A',booking:'06/10/2026 + 10:00',amount:'250',status:'Paid'}),updatedAt:'1'},
-      {id:'sample-2',...validate({name:'Sample customer B',booking:'07/10/2026 + 14:30',amount:'100',status:'Deposit'}),updatedAt:'1'},
-      {id:'sample-3',...validate({name:'Sample customer C',booking:'08/10/2026 + 11:00',amount:'300',status:'Unpaid'}),updatedAt:'1'},
-      {id:'sample-4',...validate({name:'Sample customer D',booking:'09/10/2026 + 09:30',amount:'150',status:'Quote'}),updatedAt:'1'}
+      {id:'sample-1',...validate({name:'Sample customer A',booking:'06/10/2026 + 10:00 - 11:00',amount:'250',status:'Paid'}),updatedAt:'1'},
+      {id:'sample-2',...validate({name:'Sample customer B',booking:'07/10/2026 + 14:30 - 16:00',amount:'100',status:'Deposit'}),updatedAt:'1'},
+      {id:'sample-3',...validate({name:'Sample customer C',booking:'08/10/2026 + 11:00 - 12:00',amount:'300',status:'Unpaid'}),updatedAt:'1'},
+      {id:'sample-4',...validate({name:'Sample customer D',booking:'09/10/2026 + 09:30 - 10:30',amount:'150',status:'Quote'}),updatedAt:'1'}
     ];
   }
   async list(){return structuredClone(this.rows);}
